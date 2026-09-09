@@ -1,132 +1,96 @@
-name: Release Plugin
+name: Build and Release Jellyfin Plugin
 
 on:
   push:
-    branches:
-      - master
+    branches: [master]
     paths:
       - "meta.json"
+      - "Jellyfin.Plugin.TmdbMultiLanguage.csproj"
+      - "TmdbMultiLanguagePlugin.cs"
+      - "TmdbMultiLanguageImageProvider.cs"
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build_and_release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.PAT_TOKEN }}
 
-      - name: Setup .NET
+      - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.x'
+          dotnet-version: "10.0.x"
 
       - name: Restore dependencies
         run: dotnet restore
-        
+
       - name: Build Plugin
         run: dotnet build --configuration Release --no-restore
 
-      - name: Get version from meta.json
-        id: get_version
+      - name: Get version
+        id: version
         run: |
-          VERSION=$(grep -Po '"version"\s*:\s*"\K[^"]+' meta.json)
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          VERSION=$(jq -r '.version' meta.json)
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Get commit hash
-        id: get_hash
+      - name: Package plugin
         run: |
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_OUTPUT
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          PLUGIN="Jellyfin.Plugin.TmdbMultiLanguage"
+          OUTPUT="bin/Release/net10.0"
 
-      - name: Prepare Plugin Files
-        id: prepare
-        run: |
-          OUTPUT_PATH="bin/Release/net8.0"
-          PLUGIN_NAME="Jellyfin.Plugin.TmdbMultiLanguage"
-          
           mkdir -p release_package
-          
-          cp $OUTPUT_PATH/$PLUGIN_NAME.dll release_package/
+          cp "$OUTPUT/$PLUGIN.dll" release_package/
           cp meta.json release_package/
-          
-          # Create ZIP with version only (for manifest.json)
-          ZIP_NAME="${PLUGIN_NAME}_v${{ steps.get_version.outputs.VERSION }}.zip"
-          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_OUTPUT
-          
-          cd release_package
-          zip -r ../$ZIP_NAME *
-          cd ..
-          
-          # Also create ZIP with SHA for reference
-          ZIP_NAME_WITH_SHA="${PLUGIN_NAME}_v${{ steps.get_version.outputs.VERSION }}_${{ steps.get_hash.outputs.SHORT_SHA }}.zip"
-          echo "ZIP_NAME_WITH_SHA=$ZIP_NAME_WITH_SHA" >> $GITHUB_OUTPUT
-          
-          cd release_package
-          zip -r ../$ZIP_NAME_WITH_SHA *
-          cd ..
-      
-      - name: Calculate Checksum
-        id: checksum
-        run: |
-          CHECKSUM=$(md5sum ${{ steps.prepare.outputs.ZIP_NAME }} | cut -d' ' -f1 | tr '[:lower:]' '[:upper:]')
-          echo "CHECKSUM=$CHECKSUM" >> $GITHUB_OUTPUT
-          echo "Checksum for ${{ steps.prepare.outputs.ZIP_NAME }}: $CHECKSUM"
-        
-      - name: Create Release
+
+          ZIP="$PLUGIN"_v"$VERSION".zip
+          (cd release_package && zip -r "../$ZIP" .)
+
+          CHECKSUM=$(md5sum "$ZIP" | awk '{print toupper($1)}')
+          echo "$CHECKSUM" > checksum.txt
+
+      - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.get_version.outputs.VERSION }}
-          name: Release v${{ steps.get_version.outputs.VERSION }}
-          body: |
-            Automated release from commit ${{ github.sha }}
+          tag_name: v${{ steps.version.outputs.VERSION }}
+          name: Jellyfin TMDB Multi-Language v${{ steps.version.outputs.VERSION }}
+          generate_release_notes: true
+          files: Jellyfin.Plugin.TmdbMultiLanguage_v${{ steps.version.outputs.VERSION }}.zip
 
-            **Changes in this release:**
-            ${{ github.event.head_commit.message }}
-
-            **Checksum:** ${{ steps.checksum.outputs.CHECKSUM }}
-          draft: false
-          prerelease: false
-          files: |
-            ${{ steps.prepare.outputs.ZIP_NAME }}
-            ${{ steps.prepare.outputs.ZIP_NAME_WITH_SHA }}
-          token: ${{ secrets.PAT_TOKEN }}
-          make_latest: true
-
-      - name: Update manifest.json
+      - name: Update Jellyfin repository manifest
         run: |
-          VERSION="${{ steps.get_version.outputs.VERSION }}"
-          CHECKSUM="${{ steps.checksum.outputs.CHECKSUM }}"
-          ZIP_NAME="${{ steps.prepare.outputs.ZIP_NAME }}"
-          CHANGELOG=$(jq -r .changelog meta.json)
-          TARGET_ABI=$(jq -r .targetAbi meta.json)
-          SOURCE_URL="https://github.com/${{ github.repository }}/releases/download/v${VERSION}/${ZIP_NAME}"
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          CHECKSUM=$(cat checksum.txt)
+          ZIP="Jellyfin.Plugin.TmdbMultiLanguage_v${VERSION}.zip"
+          SOURCE_URL="https://github.com/${{ github.repository }}/releases/download/v${VERSION}/${ZIP}"
+          CHANGELOG=$(jq -r '.changelog' meta.json)
 
-          NEW_ENTRY=$(jq -n \
+          jq \
             --arg version "$VERSION" \
             --arg changelog "$CHANGELOG" \
-            --arg targetAbi "$TARGET_ABI" \
-            --arg sourceUrl "$SOURCE_URL" \
             --arg checksum "$CHECKSUM" \
-            '{version:$version, changelog:$changelog, targetAbi:$targetAbi, sourceUrl:$sourceUrl, checksum:$checksum}')
+            --arg sourceUrl "$SOURCE_URL" \
+            '.[0].versions = [{
+              version: $version,
+              changelog: $changelog,
+              targetAbi: "12.0.0.0",
+              sourceUrl: $sourceUrl,
+              checksum: $checksum
+            }]' manifest.json > manifest.tmp
 
-          jq --argjson v "$NEW_ENTRY" '
-            def vkey: (.version | split(".") | map(tonumber? // 0));
-            .[0].versions = ((.[0].versions + [$v]) | unique_by(.version) | sort_by(vkey) | reverse)
-          ' manifest.json > manifest.json.tmp
-          mv manifest.json.tmp manifest.json
+          mv manifest.tmp manifest.json
 
-      - name: Commit and push manifest
+      - name: Commit manifest
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add manifest.json
-          git diff --staged --quiet && exit 0
-          git commit -m "Update manifest for v${{ steps.get_version.outputs.VERSION }}"
-          git pull --rebase origin master
+          git diff --cached --quiet || git commit -m "Publish Jellyfin repository manifest for v${{ steps.version.outputs.VERSION }}"
           git push
