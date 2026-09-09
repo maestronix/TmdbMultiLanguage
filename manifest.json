@@ -1,64 +1,11 @@
 [
   {
-    "name": "TMDB Multi-Language Images",
     "guid": "96afa51e-678e-42ac-b9f6-f3679173a23f",
-    "versions": [
-      {
-        "version": "1.0.5.0",
-        "changelog": "Added option to ignore images without TMDB user rating (vote_average = 0).",
-        "targetAbi": "10.9.0.0",
-        "sourceUrl": "https://github.com/Iceshadow1404/TmdbMultiLanguage/releases/download/v1.0.5.0/Jellyfin.Plugin.TmdbMultiLanguage_v1.0.5.0.zip",
-        "checksum": "41D5B2C467FE81F8B9DF0FB5707F4830"
-      },
-      {
-        "version": "1.0.4.0",
-        "changelog": "Added per-image-type language priority (Primary / Backdrop / Logo).",
-        "targetAbi": "10.9.0.0",
-        "sourceUrl": "https://github.com/Iceshadow1404/TmdbMultiLanguage/releases/download/v1.0.4.0/Jellyfin.Plugin.TmdbMultiLanguage_v1.0.4.0.zip",
-        "checksum": "BD6EF5A6161B6644A23291FF3D87E206"
-      },
-      {
-        "version": "1.0.3.2",
-        "changelog": "Fixed plugin version in jellyfin",
-        "targetAbi": "10.9.0.0",
-        "sourceUrl": "https://github.com/Iceshadow1404/TmdbMultiLanguage/releases/download/v1.0.3.2/Jellyfin.Plugin.TmdbMultiLanguage_v1.0.3.2.zip",
-        "checksum": "908F2334B9FCB117DE81D7C4526DA4E5"
-      },
-      {
-        "version": "1.0.3.1",
-        "changelog": "Hotfix to see debug logs in jellyfin console",
-        "targetAbi": "10.9.0.0",
-        "sourceUrl": "https://github.com/Iceshadow1404/TmdbMultiLanguage/releases/download/v1.0.3.1/Jellyfin.Plugin.TmdbMultiLanguage_v1.0.3.1.zip",
-        "checksum": "76B6EE62C21DD79788D759464A948A53"
-      },
-      {
-        "version": "1.0.3.0",
-        "changelog": "Added debug logging and debug mode toggle for TMDB API interactions",
-        "targetAbi": "10.9.0.0",
-        "sourceUrl": "https://github.com/Iceshadow1404/TmdbMultiLanguage/releases/download/v1.0.3.0/Jellyfin.Plugin.TmdbMultiLanguage_v1.0.3.0.zip",
-        "checksum": "76878AD863DC3FBFCAB04E1C39114B2C"
-      },
-      {
-        "version": "1.0.2.0",
-        "changelog": "Improved config page compatibility with Jellyfin 10.10.7 and updated plugin GUID.",
-        "targetAbi": "10.9.0.0",
-        "sourceUrl": "https://github.com/Iceshadow1404/TmdbMultiLanguage/releases/download/v1.0.2.0/Jellyfin.Plugin.TmdbMultiLanguage_v1.0.2.0.zip",
-        "checksum": "80890A14D5924BB3CD92CEE061BE88D6"
-      },
-      {
-        "version": "1.0.1.0",
-        "changelog": "Fixed config page overlay issue and configuration values not loading in web UI.",
-        "targetAbi": "10.9.0.0",
-        "sourceUrl": "https://github.com/Iceshadow1404/TmdbMultiLanguage/releases/download/v1.0.1.0/Jellyfin.Plugin.TmdbMultiLanguage_v1.0.1.0.zip",
-        "checksum": "8D83C49B30592113FF6C8C5A58FA0EF0"
-      },
-      {
-        "version": "1.0.0.0",
-        "changelog": "Initial Release. Added multi-language image support.",
-        "targetAbi": "10.9.0.0",
-        "sourceUrl": "https://github.com/Iceshadow1404/TmdbMultiLanguage/releases/download/v1.0.0.0-62c4181/Jellyfin.Plugin.TmdbMultiLanguage_v1.0.0.0_62c4181.zip",
-        "checksum": "4B9157E629F5975956D635286E815551"
-      }
-    ]
+    "name": "TMDB Multi-Language Images",
+    "description": "Load images from TMDB with configurable language preferences",
+    "overview": "Allows you to specify preferred languages for TMDB images",
+    "owner": "maestronix",
+    "category": "Metadata",
+    "versions": []
   }
 ]
