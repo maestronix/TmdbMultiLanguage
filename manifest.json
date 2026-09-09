@@ -6,6 +6,14 @@
     "overview": "Allows you to specify preferred languages for TMDB images",
     "owner": "maestronix",
     "category": "Metadata",
-    "versions": []
+    "versions": [
+      {
+        "version": "1.1.0.0",
+        "changelog": "Retargeted and rebuilt for Jellyfin 12.0.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/maestronix/TmdbMultiLanguage/releases/download/v1.1.0.0/Jellyfin.Plugin.TmdbMultiLanguage_v1.1.0.0.zip",
+        "checksum": "4322AC98369D3350D4D761802DF3C208"
+      }
+    ]
   }
 ]
