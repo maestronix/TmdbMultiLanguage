@@ -32,7 +32,7 @@ With the plugin, you get better poster coverage by checking multiple languages i
 
 1. Open **Jellyfin → Dashboard → Plugins → Repositories**
 2. Click **Add Repository**
-3. Enter the following URL: `https://raw.githubusercontent.com/Iceshadow1404/TmdbMultiLanguage/master/manifest.json`
+3. Enter the following URL: `https://raw.githubusercontent.com/maestronix/TmdbMultiLanguage/master/manifest.json`
 4. Save, then go to **Plugins → Catalog** and install the plugin.
 5. Restart Jellyfin.
 
@@ -44,15 +44,14 @@ After installation, configure your language priorities in the plugin settings to
 
 To build the project, follow these steps:
 
-1.  **Restore dependencies:**
-    ```bash
-    dotnet restore
-    ```
-    *(This command fetches all necessary packages for your project.)*
-2.  **Build the project:**
-    ```bash
-    dotnet build --configuration Release
-    ```
+1. **Restore dependencies:**
+   ```bash
+   dotnet restore
+   ```
+2. **Build the project:**
+   ```bash
+   dotnet build --configuration Release
+   ```
 
 ## 📝 Note
 
