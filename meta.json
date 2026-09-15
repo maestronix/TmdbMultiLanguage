@@ -5,9 +5,9 @@
   "overview": "Allows you to specify preferred languages for TMDB images",
   "owner": "maestronix",
   "category": "Metadata",
-  "version": "1.1.0.0",
-  "targetAbi": "12.0.0.0",
+  "version": "1.2.0.0",
+  "targetAbi": "12.1.0.0",
   "framework": "net10.0",
-  "changelog": "Retargeted and rebuilt for Jellyfin 12.0.",
+  "changelog": "Retargeted and rebuilt for Jellyfin 12.1.",
   "imageUrl": ""
 }

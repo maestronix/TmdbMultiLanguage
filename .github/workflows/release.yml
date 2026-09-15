@@ -34,11 +34,20 @@ jobs:
       - name: Build Plugin
         run: dotnet build --configuration Release --no-restore
 
-      - name: Get version
+      - name: Get version metadata
         id: version
         run: |
           VERSION=$(jq -r '.version' meta.json)
+          TARGET_ABI=$(jq -r '.targetAbi' meta.json)
+          CHANGELOG=$(jq -r '.changelog' meta.json)
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "TARGET_ABI=$TARGET_ABI" >> "$GITHUB_OUTPUT"
+          echo "CHANGELOG<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$CHANGELOG" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          echo "TIMESTAMP=$TIMESTAMP" >> "$GITHUB_OUTPUT"
 
       - name: Package plugin
         run: |
@@ -67,23 +76,28 @@ jobs:
       - name: Update Jellyfin repository manifest
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
+          TARGET_ABI="${{ steps.version.outputs.TARGET_ABI }}"
+          CHANGELOG="${{ steps.version.outputs.CHANGELOG }}"
+          TIMESTAMP="${{ steps.version.outputs.TIMESTAMP }}"
           CHECKSUM=$(cat checksum.txt)
           ZIP="Jellyfin.Plugin.TmdbMultiLanguage_v${VERSION}.zip"
           SOURCE_URL="https://github.com/${{ github.repository }}/releases/download/v${VERSION}/${ZIP}"
-          CHANGELOG=$(jq -r '.changelog' meta.json)
 
           jq \
             --arg version "$VERSION" \
+            --arg targetAbi "$TARGET_ABI" \
             --arg changelog "$CHANGELOG" \
             --arg checksum "$CHECKSUM" \
             --arg sourceUrl "$SOURCE_URL" \
-            '.[0].versions = [{
+            --arg timestamp "$TIMESTAMP" \
+            '.[0].versions = ([{
               version: $version,
               changelog: $changelog,
-              targetAbi: "12.0.0.0",
+              targetAbi: $targetAbi,
               sourceUrl: $sourceUrl,
-              checksum: $checksum
-            }]' manifest.json > manifest.tmp
+              checksum: $checksum,
+              timestamp: $timestamp
+            }] + [.[0].versions[] | select(.version != $version)])' manifest.json > manifest.tmp
 
           mv manifest.tmp manifest.json
 
